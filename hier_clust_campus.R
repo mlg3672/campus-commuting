@@ -18,13 +18,19 @@ colnames(survey)<-c("respondent","modeone","modetwo","quarters",
 zeros<-survey$mpg<2
 survey$mpg[zeros]<-20
 
+# change name of factors
+levels(survey$modeone)<-c("Bike/Walk","Bus","Carpool","Bike/Walk","Drive","Drive")
+levels(survey$modetwo)<-c("Bike/Walk","Bus","Carpool","None","None","Bike/Walk","Drive","Drive")
+
+#if modetwo factor is "None" same as modeone
+
 # calculate and add column for carbon emissions
 for (i in 1:nrow(survey)) {
   commutes = 0
-  if (survey$modeone[i] == 'Personal Vehicle'|| survey$modeone[i] == 'Bus') {
+  if (survey$modeone[i] == 'Drive'|| survey$modeone[i] == 'Bus') {
     commutes=survey$weeklyone[i]
   }
-  if (survey$modetwo[i]=='Personal Vehicle' || survey$modetwo[i]=='Bus') {
+  if (survey$modetwo[i]=='Drive' || survey$modetwo[i]=='Bus') {
     commutes=commutes+survey$weeklytwo[i]
   }
   survey$commutes[i]<-commutes
@@ -34,29 +40,30 @@ for (i in 1:nrow(survey)) {
   
 }
 
-# can use hierarchical clustering to categorize based on onewaydist, commutes, co2kg or vehshare
+
 
 # delete hybrid column 
 ss<-survey[,c(1:11)]
 
 
-
-clusters <- hclust(dist(survey[, 3:4]))
+# can use hierarchical clustering to categorize based on onewaydist, co2kg or vehshare
+clusters <- hclust(dist(survey[, c(7,11)]))
 plot(clusters)
 
 # cut off tree at desired number of clusters n=3
-clusterCut <- cutree(clusters, 3)
+clusterCut <- cutree(clusters, 4)
 
 # compare results with original species
-table(clusterCut, iris$Species)
+table(clusterCut, survey$respondent)
 
 ## use mean linkage method
-clusters <- hclust(dist(iris[, 3:4]), method = 'average')
+clusters <- hclust(dist(survey[, c(7,11)]), method = 'average')
 plot(clusters)
 
 # use cut tree 
-clusterCut <- cutree(clusters, 3)
-table(clusterCut, iris$Species)
+clusterCut <- cutree(clusters, 5)
+table(clusterCut, survey$modeone)
+
 
 ## plot to compare with original data
 ggplot(iris, aes(Petal.Length, Petal.Width, color = iris$Species)) + 
